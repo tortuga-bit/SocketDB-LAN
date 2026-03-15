@@ -17,6 +17,7 @@ std::string dispatch(const std::vector<std::string>& datos);
 
 // --- Función para crear el socket del servidor ---
 int createServerSocket(int port) {
+
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd < 0) {
         perror("socket failed");
