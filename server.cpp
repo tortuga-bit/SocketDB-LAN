@@ -18,7 +18,7 @@ std::string dispatch(const std::vector<std::string>& datos);
 // --- Función para crear el socket del servidor ---
 int createServerSocket(int port) {
 
-    int server_fd = socket(AF_INET, SOCK_STREAM, 0);
+    int server_fd = socket(AF_INET6, SOCK_STREAM, 0);
     if (server_fd < 0) {
         perror("socket failed");
         exit(EXIT_FAILURE);
@@ -29,18 +29,18 @@ int createServerSocket(int port) {
     
     //defines una estructura de tipo sockaddr_in,
     //que sirve para almacenar información sobre la dirección de red (IP y puerto).
-    struct sockaddr_in address;
+    struct sockaddr_in6 address;
     
-    // indica el tipo de dirreccion ip que se va a usar, en este caso AF_INET para IPv4
-    address.sin_family = AF_INET;
+    // indica el tipo de dirreccion ip que se va a usar, en este caso AF_INET6 para IPv6
+    address.sin6_family = AF_INET6;
 
     //sin_addr.s_addr indica la IP del servidor a la que se va a “ligar” el socket.
     //INADDR_ANY es una ipv4 que equivale a 0.0.0.0, lo que significa que el servidor escuchará en todas las interfaces de red disponibles en la máquina.
     // aqui indicamos por que ip el servidor va a escuchar, en este caso por todas las ip disponibles en la máquina.
-    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin6_addr = in6addr_any;
 
     //sin_port es el número de puerto donde el servidor escuchará.
-    address.sin_port = htons(port);
+    address.sin6_port = htons(port);
     
     //bind() asocia el socket con la dirección y puerto especificados
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
@@ -91,6 +91,8 @@ void readMessage(int client_fd) {
 
     //Limpia el buffer para evitar datos residuales
     if (bytes > 0) {
+        
+        buffer[bytes] = '\0';  // importante terminar la cadena
         // Convierte el buffer de binario a string para facilitar el procesamiento
         data = buffer;
         // data es una sola cadena que contiene el mensaje completo enviado por el cliente
@@ -103,7 +105,7 @@ void readMessage(int client_fd) {
         //mandamos la respuesta a la peticion del cliente
         send(client_fd, message.c_str(), message.size(), 0);
 
-        buffer[bytes] = '\0';  // importante terminar la cadena
+        
     }
 
     
