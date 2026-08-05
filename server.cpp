@@ -9,6 +9,8 @@
 #include <string>
 
 
+//https://port.tools/port-checker-ipv6/
+
 #define PORT 8080
 
 int add(int a, int b);
@@ -60,7 +62,7 @@ int createServerSocket(int port) {
 
 // --- Función para aceptar clientes y mostrar su IP ---
 int acceptClient(int server_fd) {
-    struct sockaddr_in client_addr;
+    struct sockaddr_in6 client_addr;
     socklen_t addrlen = sizeof(client_addr);
 
     int client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &addrlen);
@@ -69,10 +71,10 @@ int acceptClient(int server_fd) {
         exit(EXIT_FAILURE);
     }
 
-    char client_ip[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
+    char client_ip[INET6_ADDRSTRLEN];
+    inet_ntop(AF_INET6, &client_addr.sin6_addr, client_ip, INET6_ADDRSTRLEN);
     std::cout << "Client connected from: " << client_ip 
-              << ":" << ntohs(client_addr.sin_port) << std::endl;
+              << ":" << ntohs(client_addr.sin6_port) << std::endl;
 
     return client_fd;
 }
@@ -87,7 +89,7 @@ void readMessage(int client_fd) {
     
     // read() lee datos del socket cliente y los almacena en el buffer. 
     // read() retorna el número de bytes leídos, o -1 si ocurre un error.
-    ssize_t bytes = read(client_fd, buffer, sizeof(buffer) - 1);
+    ssize_t bytes = read(client_fd, buffer, sizeof(buffer) - 1);// ssize_t es un tipo de dato que representa el tamaño de un objeto en bytes y es devuelto por funciones como read() para indicar cuántos bytes fueron leídos.
 
     //Limpia el buffer para evitar datos residuales
     if (bytes > 0) {
@@ -95,9 +97,11 @@ void readMessage(int client_fd) {
         buffer[bytes] = '\0';  // importante terminar la cadena
         // Convierte el buffer de binario a string para facilitar el procesamiento
         data = buffer;
+        
         // data es una sola cadena que contiene el mensaje completo enviado por el cliente
         // parse() divide esa cadena en tokens individuales en un vector
         token = parse(data);
+        
         // mandamos el vector de tokens al dispatch para que determine la respuesta adecuada según el comando recibido
         // ademas dispatch ejecuta la función correspondiente al comando
         message = dispatch(token);
@@ -105,10 +109,7 @@ void readMessage(int client_fd) {
         //mandamos la respuesta a la peticion del cliente
         send(client_fd, message.c_str(), message.size(), 0);
 
-        
     }
-
-    
 }
 
 // --- Función para dividir un string en tokens por espacio ---
@@ -186,6 +187,7 @@ int main() {
         readMessage(client_fd);
         close(client_fd);
     }
+
 
     close(server_fd);
     return 0;
